@@ -1,10 +1,27 @@
-const { request, response } = require('express');
-const express = require('express');
-const { param } = require('express/lib/request');
+//nconst { request, response } = require('express');
+//const express = require('express');//type:"common.js"
+//const { EventEmitter } = require('events');
+//let mongo = require('mongodb');
+//let MongoClient = mongo.MongoClient;
+import express, { response } from "express";
+import { ConnectionCheckedInEvent, MongoClient } from "mongodb";
+import { EventEmitter } from 'events';
+import { request } from "http";
+const eventEmitter = new EventEmitter();
+//const { param } = require('express/lib/request');
+//const timerEventEmitter = new EventEmitter();
+//timerEventEmitter.emit("update");
 const app = express();
+// listen to the event
+eventEmitter.on('myEvent', () => {
+  console.log('Data Received');
+});
 
+// publish an event
+eventEmitter.emit('myEvent');
+app.use(express.json());//middleware
 const PORT=9000;
-const movies=[
+/*const movies=[
     {id:"100",
     name:"Finding Nemo",
     poster:"https://lumiere-a.akamaihd.net/v1/images/pp_findingnemo_herobannermobile_19752_7810e507.jpeg?region=0,0,640,480",
@@ -77,23 +94,53 @@ const movies=[
       summary:" As for Jai Bhim, it is perhaps one of the boldest films to come out of Tamil cinema. Most of you might confuse its boldness with the film's ...",
     trailer:"https://www.youtube.com/embed/UY34eAUxuRk"}
      
-    ]
-app.get('/',(request, response) =>{
+    ]*/
+    const MONGO_URL="mongodb://localhost";
+    async function createConnection(){
+const client=new MongoClient(MONGO_URL)
+await client.connect();//promise
+console.log("mongodb connected");
+return client;
+    }
+    const client=await createConnection();
+app.get('/',async(request, response) =>{
   response.send("Hello World😊")
 });
-app.get("/movies",(request,response)=>{
-  const {language,rating}=request.query;
-  if(language){
-  const movielan=movies.filter((a)=>a.language===language);
-  }if(rating){
-    const movielan=movies.filter((a)=>a.rating===rating);
-    }else{
-    response.send(movies)
-  }
+app.get("/movies",async(request,response)=>{
+  //const {language,rating}=request.query;
+  //if(language){
+  //const movieslan=movies.filter((a)=>a.language===language);
+  //response.send(movieslan)
+  //}if(rating){
+   // const movieslan=movies.filter((a)=>a.rating===rating);
+    //response.send(movieslan)
+    //}else{
+    //response.send(movies)
+ // }
+ //let filmovie=movies
+ const filter=request.query;
+ console.log(filter);
+ if(filter.rating){
+   filter.rating=parseInt(filter.rating);
+ }
+  const filmovie=await client.db("mongofirst").collection("movie").find(filter).toArray();//cursor to array
+ response.send(filmovie)
 });
-app.get("/movies/:id",(request,response)=>{
+
+
+app.post("/movies",async(request,response)=>{
+
+  const data=request.body;
+  const result=await  client.db("mongofirst").collection("movie").insertMany(data);
+  console.log(data);
+  response.send(result);
+  //response.send(data);
+});
+app.get("/movies/:id",async(request,response)=>{
   const {id}=request.params;
-  const movie=movies.find((a)=>a.id===id);
+  const movie=await client.db("mongofirst").collection("movie").findOne({id:id})
+  //db.movies.findOne({id:"102"})
+  //const movie=movies.find((a)=>a.id===id);
   movie
   ? response.send(movie)
   : response.status(404).send({message:"no matching"});
