@@ -21,7 +21,7 @@ eventEmitter.on('myEvent', () => {
 // publish an event
 eventEmitter.emit('myEvent');
 app.use(express.json());//middleware
-const PORT=9000;
+const PORT=process.env.PORT;
 /*const movies=[
     {id:"100",
     name:"Finding Nemo",

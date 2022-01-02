@@ -2,9 +2,11 @@ import { filtermovie, fullmovie, getMoviebyid, deletemovie, updatemovie } from "
 import { app as PORT } from "./index.js";
 import express from "express";
 //import {PORT} from "./index.js"
-//const PORT=9000;
+
 const router=express.Router();
-router.get("/", async (request, response) => {
+router
+.route("/")
+.get( async (request, response) => {
   //const {language,rating}=request.query;
   //if(language){
   //const movieslan=movies.filter((a)=>a.language===language);
@@ -23,8 +25,8 @@ router.get("/", async (request, response) => {
   }
   const filmovie = await filtermovie(filter); //cursor to array
   response.send(filmovie);
-});
-router.post("/", async (request, response) => {
+})
+.post(async (request, response) => {
 
   const data = request.body;
   const createmovie = await fullmovie(data);
@@ -32,7 +34,10 @@ router.post("/", async (request, response) => {
   response.send(createmovie);
   //response.send(data);
 });
-router.get("/:id", async (request, response) => {
+
+
+router
+.route("/:id").get(async (request, response) => {
   const { id } = request.params;
   const movie = await getMoviebyid(id);
   //db.movies.findOne({id:"102"})
@@ -40,8 +45,8 @@ router.get("/:id", async (request, response) => {
   movie
     ? response.send(movie)
     : response.status(404).send({ message: "no matching" });
-});
-router.delete("/:id", async (request, response) => {
+})
+.delete(async (request, response) => {
   const { id } = request.params;
   const movie = await deletemovie(id);
   //db.movies.findOne({id:"102"})
@@ -49,8 +54,8 @@ router.delete("/:id", async (request, response) => {
   movie.deletedCount > 0
     ? response.send(movie)
     : response.status(404).send({ message: "no matching" });
-});
-router.put("/:id", async (request, response) => {
+})
+.put(async (request, response) => {
   const { id } = request.params;
   const data = request.body;
   const result = await updatemovie(id, data);
@@ -62,6 +67,9 @@ router.put("/:id", async (request, response) => {
   response.send(movieid);
   // : response.status(404).send({message:"no matching"});
 });
+
+
+
 
 //app.listen(PORT, () => console.log("App is start in port", PORT));
 export const moviesRouter=router;
