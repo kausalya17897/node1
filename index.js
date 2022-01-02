@@ -128,16 +128,14 @@ app.get("/movies",async(request,response)=>{
  if(filter.rating){
    filter.rating=parseInt(filter.rating);
  }
-  const filmovie=await client.db("mongofirst").collection("movie").find(filter).toArray();//cursor to array
- response.send(filmovie)
+  await filtermovie(filter, response);
 });
 
 
 app.post("/movies",async(request,response)=>{
 
   const data=request.body;
-  const result=await client.db("mongofirst").collection("movie").insertMany(data);
-  console.log(data);
+  const result = await fullmovie(data);
   response.send(result);
   //response.send(data);
 });
@@ -162,8 +160,7 @@ app.delete("/movies/:id",async(request,response)=>{
 app.put("/movies/:id",async(request,response)=>{
   const {id}=request.params;
   const data=request.body;
-  const result=await client.db("mongofirst").collection("movie").updateOne({id:id},{$set:data});
-  const movieid=await getMoviebyid(id)
+  const movieid = await uupdatemovie(id, data);
   //db.movies.findOne({id:"102"})
   //const movie=movies.find((a)=>a.id===id);
   //movie
@@ -175,6 +172,27 @@ eventEmitter.on('myEvent', () => {
   console.log('Data Received2');
 });
 app.listen(PORT,()=>console.log("App is start in port",PORT));
+
+eventEmitter.on('myEvent', () => {
+  console.log('Data Received');
+});
+
+async function filtermovie(filter, response) {
+  const filmovie = await client.db("mongofirst").collection("movie").find(filter).toArray(); //cursor to array
+  response.send(filmovie);
+}
+
+async function fullmovie(data) {
+  const result = await client.db("mongofirst").collection("movie").insertMany(data);
+  console.log(data);
+  return result;
+}
+
+async function uupdatemovie(id, data) {
+  const result = await client.db("mongofirst").collection("movie").updateOne({ id: id }, { $set: data });
+  const movieid = await getMoviebyid(id);
+  return movieid;
+}
 
 async function deletemovie(id) {
   return await client.db("mongofirst").collection("movie").deleteOne({ id: id });
