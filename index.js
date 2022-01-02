@@ -1,12 +1,13 @@
-//nconst { request, response } = require('express');
-//const express = require('express');//type:"common.js"
-//const { EventEmitter } = require('events');
-//let mongo = require('mongodb');
-//let MongoClient = mongo.MongoClient;
+//const { request, response } = require('express');
+//const express = require('express');//type:"common.js";
+
 import express, { response } from "express";
 import { ConnectionCheckedInEvent, MongoClient } from "mongodb";
 import { EventEmitter } from 'events';
 import { request } from "http";
+import dotenv from "dotenv";
+dotenv.config();
+console.log(process.env);
 const eventEmitter = new EventEmitter();
 //const { param } = require('express/lib/request');
 //const timerEventEmitter = new EventEmitter();
@@ -95,7 +96,11 @@ const PORT=9000;
     trailer:"https://www.youtube.com/embed/UY34eAUxuRk"}
      
     ]*/
-    const MONGO_URL="mongodb://localhost";
+   
+   //one &only line change to make it online
+    //const MONGO_URL="mongodb://localhost";
+    const MONGO_URL=process.env.MONGO_URL;
+    
     async function createConnection(){
 const client=new MongoClient(MONGO_URL)
 await client.connect();//promise
@@ -131,19 +136,51 @@ app.get("/movies",async(request,response)=>{
 app.post("/movies",async(request,response)=>{
 
   const data=request.body;
-  const result=await  client.db("mongofirst").collection("movie").insertMany(data);
+  const result=await client.db("mongofirst").collection("movie").insertMany(data);
   console.log(data);
   response.send(result);
   //response.send(data);
 });
 app.get("/movies/:id",async(request,response)=>{
   const {id}=request.params;
-  const movie=await client.db("mongofirst").collection("movie").findOne({id:id})
+  const movie=await getMoviebyid(id)
   //db.movies.findOne({id:"102"})
   //const movie=movies.find((a)=>a.id===id);
   movie
   ? response.send(movie)
   : response.status(404).send({message:"no matching"});
 });
-
+app.delete("/movies/:id",async(request,response)=>{
+  const {id}=request.params;
+  const movie=await deletemovie(id)
+  //db.movies.findOne({id:"102"})
+  //const movie=movies.find((a)=>a.id===id);
+  movie.deletedCount>0
+  ? response.send(movie)
+  : response.status(404).send({message:"no matching"});
+});
+app.put("/movies/:id",async(request,response)=>{
+  const {id}=request.params;
+  const data=request.body;
+  const result=await client.db("mongofirst").collection("movie").updateOne({id:id},{$set:data});
+  const movieid=await getMoviebyid(id)
+  //db.movies.findOne({id:"102"})
+  //const movie=movies.find((a)=>a.id===id);
+  //movie
+ // ? 
+  response.send(movieid)
+ // : response.status(404).send({message:"no matching"});
+});
+eventEmitter.on('myEvent', () => {
+  console.log('Data Received2');
+});
 app.listen(PORT,()=>console.log("App is start in port",PORT));
+
+async function deletemovie(id) {
+  return await client.db("mongofirst").collection("movie").deleteOne({ id: id });
+}
+
+async function getMoviebyid(id) {
+  return await client.db("mongofirst").collection("movie").findOne({ id: id });
+}
+
