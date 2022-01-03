@@ -171,7 +171,7 @@ app.put("/movies/:id",async(request,response)=>{
 eventEmitter.on('myEvent', () => {
   console.log('Data Received2');
 });
-app.listen(PORT,()=>console.log("App is start in port",PORT));
+app.listen(process.env.PORT,()=>console.log("App is start in port",PORT));
 
 eventEmitter.on('myEvent', () => {
   console.log('Data Received');
